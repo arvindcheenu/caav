@@ -1,0 +1,355 @@
+/* What the toolkit adds to the HeedVision site's own look. shared/theme.css and shared/hv.css are unchanged
+   copies from the paper site: tokens, buttons, the page column, scroll progress and the edge blur all come
+   from there. */
+
+:root {
+  --changed: color-mix(in srgb, var(--accent) 20%, var(--surface-2));
+  --c-comment: color-mix(in srgb, var(--fg) 58%, transparent);
+  --c-string: #a83c63;
+  --c-keyword: #8a4a1c;
+  --c-number: #2a64b8;
+}
+
+.dark {
+  --c-string: #f08fbf;
+  --c-keyword: #f8a45a;
+  --c-number: #8db8ff;
+}
+
+/* While SN Pro is on its way: the page's text is hidden and laid out, and a skeleton stands in. The skeleton
+   waits a moment to appear, so a font that's already cached doesn't flash it. */
+.page-skel {
+  display: none;
+}
+
+.fonts-pending .page-skel {
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: min(780px, 100%);
+  padding: 56px 20px 0;
+  transform: translateX(-50%);
+  pointer-events: none;
+  animation: skel-appear 1ms 150ms both;
+}
+
+@keyframes skel-appear {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.fonts-pending main,
+.fonts-pending .site-foot {
+  visibility: hidden;
+}
+
+.skel-page-title {
+  width: 34%;
+  height: 56px;
+  margin: 16px 0 24px;
+}
+
+.page-skel .skel-line:nth-of-type(3) {
+  width: 72%;
+}
+
+.page-skel .skel-line:last-child {
+  width: 58%;
+}
+
+.skel-page-actions {
+  width: 62%;
+  height: 40px;
+  margin: 28px 0;
+  border-radius: var(--radius);
+}
+
+/* Links: colour alone, no underline. */
+a {
+  text-decoration: none;
+  transition: color 140ms;
+}
+
+a:hover {
+  color: var(--title);
+}
+
+.prose a,
+.venue a,
+.site-foot a {
+  font-weight: var(--w-strong);
+}
+
+.btn:hover {
+  color: var(--fg);
+}
+
+code {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 0.88em;
+}
+
+.prose pre,
+.code-panel pre {
+  margin: 16px 0;
+  padding: 16px 18px;
+  overflow-x: auto;
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  box-shadow: var(--well);
+  font-size: 13.5px;
+  line-height: 1.6;
+}
+
+pre code {
+  font-size: inherit;
+}
+
+.c-comment { color: var(--c-comment); }
+.c-string { color: var(--c-string); }
+.c-keyword { color: var(--c-keyword); }
+.c-number { color: var(--c-number); }
+
+/* Title */
+
+.toolkit-title {
+  margin: 16px 0 10px;
+  color: var(--title);
+  font-size: clamp(64px, 11vw, 104px);
+  font-weight: var(--w-display);
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+/* Reading pages: Markdown takes the paper page's headings. */
+
+.prose h1 {
+  margin: 16px 0 14px;
+  color: var(--title);
+  font-size: clamp(38px, 6vw, 56px);
+  font-weight: var(--w-display);
+  letter-spacing: -0.02em;
+}
+
+.prose h2 {
+  margin: 52px 0 12px;
+  color: color-mix(in srgb, var(--title) 78%, var(--sec-ink));
+  font-size: 25px;
+  letter-spacing: -0.014em;
+}
+
+.prose h3 {
+  margin: 28px 0 8px;
+  font-size: 19px;
+}
+
+.prose li {
+  margin: 4px 0;
+  max-width: 66ch;
+}
+
+.prose table {
+  display: block;
+  margin: 16px 0;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+.prose th {
+  text-align: left;
+  font-weight: var(--w-strong);
+}
+
+.prose th,
+.prose td {
+  padding: 6px 18px 6px 0;
+  vertical-align: top;
+}
+
+/* Contents on screens too narrow for the rail beside the page. */
+.inline-toc {
+  margin: 20px 0 0;
+  padding: 0;
+  list-style: none;
+  columns: 2;
+  column-gap: 24px;
+  font-size: 15px;
+}
+
+.inline-toc li {
+  margin: 0 0 4px;
+  break-inside: avoid;
+}
+
+@media (min-width: 1241px) {
+  .inline-toc {
+    display: none;
+  }
+}
+
+/* Playground: wider than the page's column, and still centred on it. */
+
+.wide {
+  --wide: min(1120px, 100vw - 40px);
+  width: var(--wide);
+  margin-left: calc((100% - var(--wide)) / 2);
+}
+
+.playground-actions {
+  margin: 16px 0 20px;
+}
+
+.views {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.playground[data-count="1"] .views {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@media (max-width: 700px) {
+  .views {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.view-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  min-height: 40px;
+  margin: 0 0 8px;
+}
+
+.who {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 16px;
+  font-weight: var(--w-strong);
+  letter-spacing: 0;
+}
+
+.dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--person);
+}
+
+.stage {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  box-shadow: var(--plate);
+}
+
+.playground[data-count="1"] .stage {
+  aspect-ratio: 16 / 9;
+}
+
+/* Held open with a pulse until the playground's module arrives. */
+.stage.skel {
+  display: block;
+  border-radius: var(--radius);
+  background: var(--line);
+  box-shadow: none;
+}
+
+.stage > canvas:not(.caav-panel) {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: var(--radius);
+  touch-action: pan-y; /* a vertical swipe still scrolls the page */
+  cursor: grab;
+}
+
+.stage > canvas:not(.caav-panel):focus-visible {
+  outline-offset: -3px;
+}
+
+.caav-panel {
+  border-radius: var(--radius);
+}
+
+/* Shows where this person's head ray is pointing. */
+.reticle {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 16px;
+  height: 16px;
+  margin: -8px 0 0 -8px;
+  border: 2px solid var(--person);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.status {
+  margin: 8px 0 0;
+  min-height: calc(2 * 1.45em);
+  color: var(--fg-3);
+  font-size: 14px;
+  line-height: 1.45;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Narrow views can wrap the status to three lines, so that height is held from the start. */
+@media (max-width: 860px) {
+  .status {
+    min-height: calc(3 * 1.45em);
+  }
+}
+
+.code-panel {
+  margin-top: 24px;
+}
+
+.code-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+}
+
+.code-head p {
+  margin: 0;
+  color: var(--fg-3);
+  font-size: 15px;
+}
+
+.line {
+  display: block;
+  min-height: 1.6em;
+  margin: 0 -18px;
+  padding: 0 18px;
+}
+
+.line.changed {
+  background: var(--changed);
+}
+
+/* Leva's floating panel starts below the sound switch, so its scrolling part has to stop sooner than Leva assumes. */
+[class*="-fill-false"] > div:last-child {
+  max-height: calc(100vh - 120px) !important;
+}
+
+/* Footer */
+
+.site-foot .logos {
+  min-height: 30px;
+}
+
+.foot-end {
+  min-height: 40px;
+}

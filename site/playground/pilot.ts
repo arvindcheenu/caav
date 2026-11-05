@@ -3,7 +3,7 @@ import { Vector3, type PerspectiveCamera } from "three";
 const clamp = (value: number, low: number, high: number) => Math.min(high, Math.max(low, value));
 
 /** Small seeded generator, so each viewer wanders the same way on every load. */
-function random(seed: number) {
+export function random(seed: number) {
   let a = seed >>> 0;
   return () => {
     a = (a + 0x6d2b79f5) >>> 0;
@@ -38,8 +38,8 @@ export class Pilot {
 
   constructor(
     private readonly camera: PerspectiveCamera,
-    private readonly centre: Vector3,
-    private readonly reach: number,
+    private centre: Vector3,
+    private reach: number,
     index: number,
   ) {
     this.yaw = 0.5 + index * ((2 * Math.PI) / 4);
@@ -47,6 +47,15 @@ export class Pilot {
     this.distance = reach * 2.2;
     this.spin = (index % 2 === 0 ? 1 : -1) * (0.09 + 0.02 * index);
     this.rand = random(11 + 18 * index);
+  }
+
+  /** Faces a different object, at a distance that suits its size. */
+  retarget(centre: Vector3, reach: number) {
+    this.centre = centre;
+    this.reach = reach;
+    this.distance = reach * 2.2;
+    this.aim.set(0, 0, 0);
+    this.aimTo.set(0, 0, 0);
   }
 
   /** A person's drag or key press. */

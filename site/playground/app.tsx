@@ -1,4 +1,4 @@
-import { button, Leva, useControls } from "leva";
+import { Leva, useControls } from "leva";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { ACCUMULATOR_KINDS } from "caav";
@@ -7,7 +7,7 @@ import { changedLines, generateCode } from "./code";
 import { Playground } from "./engine";
 import { highlightLines } from "./highlight";
 import type { Instance } from "./instance";
-import { PEOPLE, START_COLOURS, START_GROUP, START_PRESENTATIONS, type GroupSettings, type Person, type PersonSettings, type TooltipEvent } from "./settings";
+import { OBJECTS, PEOPLE, START_GROUP, START_PEOPLE, startPerson, type GroupSettings, type Person, type PersonSettings, type TooltipEvent } from "./settings";
 
 const PRESENTATION_LABELS: Record<string, string> = {
   "World, embedded": PRESENTATION_KINDS[0],
@@ -22,6 +22,13 @@ const ACCUMULATOR_LABELS = { Sum: ACCUMULATOR_KINDS[0], Maximum: ACCUMULATOR_KIN
 
 const TOOLTIP_LABELS: Record<string, TooltipEvent> = { Off: "off", "On dwell": "dwell", "On joint gaze": "jointstart", "On gaze landing": "gazeenter" };
 
+declare global {
+  interface Window {
+    /** shared/tactile.js: the paper site's sounds. */
+    HVTactile?: { play(name: "press" | "on" | "off"): void };
+  }
+}
+
 /** One person's Leva folder and view. Each person's settings live here, independent of everyone else's. */
 function PersonView({ engine, person, index, onChange }: { engine: Playground; person: Person; index: number; onChange: (id: string, settings: PersonSettings) => void }) {
   const canvas = useRef<HTMLCanvasElement>(null);
@@ -29,17 +36,18 @@ function PersonView({ engine, person, index, onChange }: { engine: Playground; p
   const status = useRef<HTMLParagraphElement>(null);
   const instanceRef = useRef<Instance | null>(null);
 
+  const start = startPerson(person.id);
   const [values, set] = useControls(
     person.label,
     () => ({
-      colour: { label: "Colour", value: START_COLOURS[person.id] },
-      presentation: { label: "Presentation", value: START_PRESENTATIONS[person.id], options: PRESENTATION_LABELS },
-      trigger: { label: "Trigger", value: "always", options: TRIGGER_LABELS },
-      show: { label: "Show attention", value: false, render: (get) => get(`${person.label}.trigger`) === "explicit" },
-      hold: { label: "Hold (s)", value: 2, min: 0, max: 6, step: 0.5, render: (get) => get(`${person.label}.trigger`) === "implicit" },
-      accumulator: { label: "Accumulator", value: "sum", options: ACCUMULATOR_LABELS },
-      threshold: { label: "Threshold", value: 0.05, min: 0.01, max: 0.9, step: 0.01 },
-      tooltip: { label: "Tooltip", value: "off", options: TOOLTIP_LABELS },
+      colour: { label: "Colour", value: start.colour },
+      presentation: { label: "Presentation", value: start.presentation, options: PRESENTATION_LABELS },
+      trigger: { label: "Trigger", value: start.trigger, options: TRIGGER_LABELS },
+      show: { label: "Show attention", value: start.show, render: (get) => get(`${person.label}.trigger`) === "explicit" },
+      hold: { label: "Hold (s)", value: start.hold, min: 0, max: 6, step: 0.5, render: (get) => get(`${person.label}.trigger`) === "implicit" },
+      accumulator: { label: "Accumulator", value: start.accumulator, options: ACCUMULATOR_LABELS },
+      threshold: { label: "Threshold", value: start.threshold, min: 0.01, max: 0.9, step: 0.01 },
+      tooltip: { label: "Tooltip", value: start.tooltip, options: TOOLTIP_LABELS },
     }),
     { order: 2 + index },
     [person.id],
@@ -61,7 +69,10 @@ function PersonView({ engine, person, index, onChange }: { engine: Playground; p
 
   /** A click or the space key means asking, as in the paper. It only counts under an explicit trigger. */
   const ask = useCallback(() => {
-    if (latest.current.trigger === "explicit") set({ show: !latest.current.show });
+    if (latest.current.trigger !== "explicit") return;
+    const show = !latest.current.show;
+    set({ show });
+    window.HVTactile?.play(show ? "on" : "off");
   }, [set]);
 
   useEffect(() => {
@@ -71,10 +82,17 @@ function PersonView({ engine, person, index, onChange }: { engine: Playground; p
 
   return (
     <article className="view" style={{ "--person": settings.colour } as React.CSSProperties}>
-      <h3 className="who">
-        <span className="dot" aria-hidden="true" />
-        {person.label}
-      </h3>
+      <div className="view-head">
+        <h3 className="who">
+          <span className="dot" aria-hidden="true" />
+          {person.label}
+        </h3>
+        {settings.trigger === "explicit" && (
+          <button type="button" className="btn" aria-pressed={settings.show} onClick={() => set({ show: !settings.show })}>
+            Show attention
+          </button>
+        )}
+      </div>
       <div className="stage" ref={stage}>
         <canvas
           ref={canvas}
@@ -158,17 +176,15 @@ function useGroupControls(engine: Playground) {
   const scene = useControls(
     "Scene",
     {
-      people: { label: "People", value: 2, min: 1, max: 4, step: 1 },
-      object: { label: "Object", value: START_GROUP.object, options: { "Terrain (one mesh)": "terrain", "Bars (a group)": "bars" } },
+      people: { label: "People", value: START_PEOPLE, min: 1, max: 4, step: 1 },
+      object: { label: "Object", value: START_GROUP.object, options: Object.fromEntries(Object.entries(OBJECTS).map(([name, { label }]) => [label, name])) },
       wander: { label: "Look around", value: engine.wandering },
-      "Look at the same spot": button(() => engine.meet()),
-      "Clear attention": button(() => engine.clearAttention()),
     },
     { order: 0 },
   );
-  const recording = useControls(
+  const [recording, setRecording] = useControls(
     "Recording",
-    {
+    () => ({
       voxelSize: { label: "Voxel size", value: START_GROUP.voxelSize, min: 0.04, max: 0.24, step: 0.01 },
       influenceRadius: { label: "Radius (voxels)", value: START_GROUP.influenceRadius, min: 0, max: 4, step: 0.1 },
       gain: { label: "Gain (per s)", value: START_GROUP.gain, min: 0.1, max: 2, step: 0.1 },
@@ -176,16 +192,19 @@ function useGroupControls(engine: Playground) {
       decay: { label: "Decay", value: START_GROUP.decay },
       halfLife: { label: "Half-life (s)", value: START_GROUP.halfLife, min: 5, max: 120, step: 5, render: (get) => get("Recording.decay") },
       dwellTime: { label: "Dwell (s)", value: START_GROUP.dwellTime, min: 0.5, max: 5, step: 0.1 },
-    },
-    { order: 1 },
+    }),
+    { order: 1, collapsed: true },
+    [],
   );
+  // Each object starts at the voxel size that suits it, and you can change it from there.
+  useEffect(() => setRecording({ voxelSize: OBJECTS[scene.object as GroupSettings["object"]].voxelSize }), [scene.object, setRecording]);
   const shared = useControls(
     "Shared colour",
     {
       chooseShared: { label: "Choose a colour", value: START_GROUP.chooseShared },
       sharedColour: { label: "Colour", value: START_GROUP.sharedColour, render: (get) => get("Shared colour.chooseShared") },
     },
-    { order: 6 },
+    { order: 6, collapsed: true },
   );
   const group: GroupSettings = { object: scene.object as GroupSettings["object"], ...recording, ...shared };
   return { people: scene.people, wander: scene.wander, group };
@@ -194,7 +213,7 @@ function useGroupControls(engine: Playground) {
 function CodePanel({ code }: { code: string }) {
   const previous = useRef(code);
   const [marked, setMarked] = useState<Set<number>>(new Set());
-  const [copied, setCopied] = useState(false);
+  const [copied, setCopied] = useState<string | null>(null);
 
   useEffect(() => {
     if (code === previous.current) return;
@@ -203,16 +222,19 @@ function CodePanel({ code }: { code: string }) {
   }, [code]);
 
   const copy = async () => {
-    await navigator.clipboard.writeText(code);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
+    const worked = await navigator.clipboard.writeText(code).then(
+      () => true,
+      () => false,
+    );
+    setCopied(worked ? "Copied" : "Couldn't copy, select the code instead");
+    setTimeout(() => setCopied(null), 2000);
   };
 
   return (
     <div className="code-panel">
       <div className="code-head">
+        <button type="button" className="btn" onClick={copy} aria-live="polite">{copied ?? "Copy code"}</button>
         <p>The code for these settings. Lines from your last change are tinted.</p>
-        <button type="button" onClick={copy}>{copied ? "Copied" : "Copy code"}</button>
       </div>
       <pre tabIndex={0} aria-label="Code for the current settings">
         <code>
@@ -225,31 +247,62 @@ function CodePanel({ code }: { code: string }) {
   );
 }
 
-/** Leva in the HeedVision palette. It takes colours as values, so they are read from the page's tokens. */
-function levaTheme() {
-  const token = (name: string) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-  return {
-    colors: {
-      elevation1: token("--surface-2"),
-      elevation2: token("--surface-2"),
-      elevation3: token("--bg"),
-      accent1: token("--accent"),
-      accent2: token("--accent"),
-      accent3: token("--accent"),
-      highlight1: token("--quiet"),
-      highlight2: token("--fg"),
-      highlight3: token("--fg"),
-      vivid1: token("--title"),
-      folderWidgetColor: token("--quiet"),
-      folderTextColor: token("--fg"),
-      toolTipBackground: token("--fg"),
-      toolTipText: token("--bg"),
-    },
-    sizes: { rootWidth: "100%", controlWidth: "58%", rowHeight: "28px" },
-    fonts: { mono: "ui-monospace, SFMono-Regular, Menlo, monospace", sans: token("--f-text") },
-    fontSizes: { root: "12px" },
-    radii: { xs: "4px", sm: "6px", lg: "14px" },
-  };
+/** Leva in the HeedVision palette. Its colours are the page's own variables, so the theme switch reaches them. */
+const LEVA_THEME = {
+  colors: {
+    elevation1: "var(--bg)",
+    elevation2: "var(--surface-2)",
+    elevation3: "var(--bg)",
+    accent1: "var(--accent)",
+    accent2: "var(--accent)",
+    accent3: "var(--accent)",
+    highlight1: "var(--fg-3)",
+    highlight2: "var(--fg-2)",
+    highlight3: "var(--fg)",
+    vivid1: "var(--title)",
+    folderWidgetColor: "var(--fg-3)",
+    folderTextColor: "var(--fg)",
+    toolTipBackground: "var(--fg)",
+    toolTipText: "var(--bg)",
+  },
+  shadows: { level1: "var(--plate)", level2: "var(--raised-more)" },
+  sizes: { rootWidth: "304px", controlWidth: "170px", rowHeight: "28px", titleBarHeight: "36px" },
+  fonts: { mono: "var(--f-text)", sans: "var(--f-text)" },
+  fontSizes: { root: "12.5px" },
+  radii: { xs: "4px", sm: "6px", lg: "var(--r)" },
+};
+
+/** Leva's panel, floating over the page. Dragged by its title bar, and only around while the playground is on screen. */
+function FloatingPanel() {
+  // Below the sound switch to start. Leva restarts each drag from this, so it has to follow the panel.
+  const [position, setPosition] = useState({ x: 0, y: 54 });
+  const [onScreen, setOnScreen] = useState(true);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(([entry]) => setOnScreen(entry.isIntersecting));
+    observer.observe(document.querySelector("#playground")!);
+    return () => observer.disconnect();
+  }, []);
+
+  // Leva's controls make the same press sound as every other control on the site.
+  useEffect(() => {
+    const press = (event: PointerEvent) => {
+      const target = event.target as Element;
+      if (target.closest?.('[class*="leva-c-"]') && target.closest("input, select, label, button")) window.HVTactile?.play("press");
+    };
+    window.addEventListener("pointerdown", press, { capture: true, passive: true });
+    return () => window.removeEventListener("pointerdown", press, { capture: true });
+  }, []);
+
+  return (
+    <Leva
+      hidden={!onScreen}
+      collapsed={window.innerWidth < 1100}
+      hideCopyButton
+      theme={LEVA_THEME}
+      titleBar={{ title: "Settings", drag: true, filter: false, position, onDrag: setPosition as (point: { x?: number; y?: number }) => void }}
+    />
+  );
 }
 
 function App({ engine }: { engine: Playground }) {
@@ -271,20 +324,23 @@ function App({ engine }: { engine: Playground }) {
   }, [group.voxelSize]);
   useEffect(() => engine.applyGroup({ ...group, voxelSize: settled }), [engine, settled, ...Object.values({ ...group, voxelSize: 0 })]);
 
-  const present = people.filter((person) => settings[person.id]).map((person) => ({ person, settings: settings[person.id] }));
+  // Everyone has settings from the first render, so the code panel never appears late or changes height.
+  const present = people.map((person) => ({ person, settings: settings[person.id] ?? startPerson(person.id) }));
   const code = generateCode({ ...group, voxelSize: settled }, present);
 
   return (
     <>
+      <FloatingPanel />
+      <div className="actions playground-actions">
+        <button type="button" className="btn" onClick={() => engine.meet()}>Look at the same spot</button>
+        <button type="button" className="btn" onClick={() => engine.clearAttention()}>Clear attention</button>
+      </div>
       <div className="playground" data-count={count}>
         <div className="views">
           {people.map((person, index) => (
             <PersonView key={person.id} engine={engine} person={person} index={index} onChange={onChange} />
           ))}
         </div>
-        <aside className="controls" aria-label="Settings">
-          <Leva fill flat titleBar={false} hideCopyButton theme={levaTheme()} />
-        </aside>
       </div>
       <CodePanel code={code} />
     </>

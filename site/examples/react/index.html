@@ -4,31 +4,40 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>caav with React Three Fiber</title>
-    <link rel="stylesheet" href="../../style.css" />
+    <!-- chrome-head -->
     <style>
       #root {
         position: relative;
-        height: 70vh;
+        height: 60vh;
         margin-top: 16px;
         overflow: hidden;
         border-radius: var(--radius);
         background: #17181b;
+        box-shadow: var(--plate);
       }
     </style>
   </head>
   <body>
-    <nav class="site-nav" aria-label="Site"><a href="../../">caav home</a><a href="../../docs/#react-three-fiber">React Three Fiber docs</a><a href="https://github.com/arvindcheenu/caav/blob/main/site/examples/react/app.tsx">This example's source</a></nav>
-    <h1 style="font-size: 44px">caav in React Three Fiber</h1>
-    <p>One head-tracked camera, slowly turning, using the library's hooks.</p>
-    <label style="display: grid; gap: 4px; max-width: 280px">Presentation
-      <select id="presentation">
+    <!-- chrome-top -->
+    <main class="page" id="main">
+      <div class="actions">
+        <a class="btn" href="../../"><svg data-fa="arrow-left" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M11 6l-6 6 6 6"/></svg> caav home</a>
+        <a class="btn" href="../../docs/#react-three-fiber">React Three Fiber docs</a>
+        <a class="btn" href="https://github.com/arvindcheenu/caav/blob/main/site/examples/react/app.tsx">This example's source</a>
+      </div>
+      <h1 class="page-title">caav in React Three Fiber</h1>
+      <p class="page-sub">One head-tracked camera, slowly turning, using the library's hooks.</p>
+      <label for="presentation">Presentation</label>
+      <select class="field" id="presentation" style="max-width: 320px; margin-top: 4px">
         <option value="world-embedded">World, embedded</option>
-        <option value="world-separated">World, separated (miniature)</option>
-        <option value="camera-embedded">Camera, embedded (box faces)</option>
-        <option value="camera-separated">Camera, separated (2D panel)</option>
+        <option value="world-separated">World, separated</option>
+        <option value="camera-embedded">Camera, embedded</option>
+        <option value="camera-separated">Camera, separated</option>
       </select>
-    </label>
-    <div id="root"></div>
+      <div id="root"></div>
+    </main>
+    <!-- chrome-foot -->
+    <script type="module" src="../../page.ts"></script>
     <script type="module" src="./app.tsx"></script>
   </body>
 </html>

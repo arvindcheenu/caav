@@ -94,6 +94,18 @@ describe("AttentionView", () => {
     expect(view.miniature!.object.position.toArray()).toEqual([3, 2, 1]);
   });
 
+  it("keeps a moved miniature and what it shows across a style change", () => {
+    const { view, run } = setup();
+    view.setPresentation("world-separated");
+    run(0.5);
+    view.miniature!.moveTo(3, 2, 1);
+    view.setStyle({ surface: "#ffffff", ink: "#111111" });
+    run(0.2);
+    expect(view.presentation).toBe("world-separated");
+    expect(view.miniature!.object.position.toArray()).toEqual([3, 2, 1]);
+    expect(view.shading.attended).toBeGreaterThan(0);
+  });
+
   it("removes its objects from the scene when disposed", () => {
     const { scene, view, run } = setup();
     view.setPresentation("world-separated");

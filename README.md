@@ -70,4 +70,4 @@ Network sync, eye tracking and data-agnostic capture are not built, and nothing 
 
 ## Licence
 
-The code is under the [MIT License](LICENSE). The demo bundles the SN Pro font, which is under the [SIL Open Font License](site/fonts/OFL.txt).
+The code is under the [MIT License](LICENSE). The demo bundles the SN Pro font, which is under the [SIL Open Font License](site/public/shared/fonts/OFL.txt).

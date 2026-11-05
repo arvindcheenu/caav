@@ -48,6 +48,8 @@ Layout:
 - `src/three`: voxelize, attach, tooltip, view, and `presentations/` with one file per quadrant.
 - `src/react`: thin hooks over `src/three`.
 - `site`: landing page, docs, playground and examples.
+- `site/public/shared`: unchanged copies of the HeedVision paper site's `shared/` (theme, buttons, scroll progress, sound, hold-for-keys, fonts). Copy new versions over them rather than editing them here, and put toolkit changes in `site/public/style.css`.
+- Font Awesome Pro icons and institution logos are deliberately not in this repository. Pages load them from the paper site's `/shared/` when hosted at `/toolkit/`, and do without them elsewhere.
 - `site/content`: `docs.md` and `landing.md` become the pages. `docs.md` is also published as `llms-full.txt`.
 - `test`: Vitest. `test/samples.test.ts` typechecks the code blocks in the docs and landing page, and the playground's generated code.
 
@@ -59,5 +61,6 @@ Rules:
 - A viewer's colour must reach the screen exactly, so colours are sRGB throughout and presentations skip tone mapping.
 - When you change the API, update `site/content/docs.md`. The sample tests will fail if its code no longer compiles, but they cannot catch wrong prose.
 - If you change what the playground does, update `site/playground/code.ts` to match, so the code it shows stays true.
+- The site must not shift as it loads. `playgroundShell` in `site/vite.config.ts` writes the playground's first layout into the page, so if you change that layout or the starting settings, keep the shell the same height. Page text stays hidden behind a skeleton until SN Pro has loaded (`waitForFonts`), because text wraps differently in the fallback font.
 
 Writing style for the docs: plain and direct, no em dashes, and only claim what was actually tested.

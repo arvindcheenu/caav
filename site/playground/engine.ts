@@ -13,8 +13,8 @@ import {
 } from "caav";
 import { attachAttention, type AttachedTarget } from "caav/three";
 import { Instance } from "./instance";
-import { createBars, createScene, createTerrain, DARK_THEME, LIGHT_THEME } from "./scene";
-import { START_GROUP, type GroupSettings, type Person, type PersonSettings } from "./settings";
+import { applyTheme, createBars, createProtein, createScatter, createScene, createTerrain, DARK_THEME, LIGHT_THEME } from "./scene";
+import { OBJECTS, START_GROUP, type GroupSettings, type Person, type PersonSettings } from "./settings";
 
 const TOOLTIP_LEAD = { dwell: "Rested here", jointstart: "Looking together", gazeenter: "Looking at the object" };
 
@@ -35,10 +35,15 @@ interface Member {
   lastStatus: string;
 }
 
+/** The theme the paper site's switch has chosen. shared/site.js keeps the .dark class up to date. */
+function currentTheme() {
+  return document.documentElement.classList.contains("dark") ? DARK_THEME : LIGHT_THEME;
+}
+
 /** The playground's three.js side. React owns the controls and the page; this owns the scene and the library calls. */
 export class Playground {
   readonly session = createSession({ captureRate: START_GROUP.captureRate, influenceRadius: START_GROUP.influenceRadius, gain: START_GROUP.gain, dwellTime: START_GROUP.dwellTime, decay: halfLifeDecay(START_GROUP.halfLife) });
-  private readonly theme = matchMedia("(prefers-color-scheme: dark)").matches ? DARK_THEME : LIGHT_THEME;
+  private theme = currentTheme();
   private readonly scene = createScene(this.theme);
   private readonly members = new Map<string, Member>();
   private group = START_GROUP;
@@ -53,7 +58,18 @@ export class Playground {
     for (const type of ["dwell", "jointstart", "gazeenter"] as const) {
       this.session.on(type, (event) => this.showTooltip(type, event));
     }
+    window.addEventListener("hv-theme", this.onTheme);
     this.frameId = requestAnimationFrame(this.frame);
+  }
+
+  private onTheme = () => {
+    this.theme = currentTheme();
+    applyTheme(this.scene, this.model, this.theme);
+    for (const { instance } of this.members.values()) instance.view.setStyle(this.presentationStyle());
+  };
+
+  private presentationStyle() {
+    return { surface: this.theme.surface, ink: this.theme.ink };
   }
 
   get wandering() {
@@ -61,15 +77,18 @@ export class Playground {
   }
 
   private loadModel(name: GroupSettings["object"]) {
-    this.model = name === "bars" ? createBars(this.theme) : createTerrain(this.theme);
+    this.model = { terrain: createTerrain, bars: createBars, protein: createProtein, scatter: createScatter }[name](this.theme);
     this.scene.add(this.model);
-    this.attached = attachAttention(this.session, this.model, { id: name, voxelSize: this.group.voxelSize });
+    this.attached = attachAttention(this.session, this.model, { id: name, voxelSize: OBJECTS[name].voxelSize });
   }
 
   private unloadModel() {
     this.attached.detach();
     this.scene.remove(this.model);
-    this.model.traverse((child) => (child as { geometry?: { dispose(): void } }).geometry?.dispose());
+    this.model.traverse((child) => {
+      (child as { geometry?: { dispose(): void } }).geometry?.dispose();
+      (child as { dispose?: () => void }).dispose?.(); // instanced meshes hold their own buffers
+    });
   }
 
   addPerson(person: Person, index: number, canvas: HTMLCanvasElement, overlay: HTMLElement, status: HTMLElement, settings: PersonSettings) {
@@ -99,7 +118,7 @@ export class Playground {
       accumulator: settings.accumulator,
       threshold: settings.threshold,
       colour: this.colourPolicy(),
-      style: { surface: this.theme.surface, ink: this.theme.ink },
+      style: this.presentationStyle(),
     });
   }
 
@@ -219,6 +238,7 @@ export class Playground {
   }
 
   dispose() {
+    window.removeEventListener("hv-theme", this.onTheme);
     cancelAnimationFrame(this.frameId);
     for (const id of [...this.members.keys()]) this.removePerson(id);
     this.unloadModel();

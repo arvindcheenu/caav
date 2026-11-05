@@ -1,0 +1,356 @@
+/* HeedVision: the shared components, for the paper page, the script page, the slides' controls and
+   the presenter view. Font, corners and palette are in shared/theme.css. Each component has one block
+   here, and nothing later in the file overrides it. */
+
+:root {
+  --radius: var(--r);
+  --surface: var(--bg);
+  --fg-2: color-mix(in srgb, var(--fg) 84%, transparent);
+  --fg-3: color-mix(in srgb, var(--fg) 70%, transparent);
+  --line: color-mix(in srgb, var(--fg) 13%, transparent);
+  --hover: color-mix(in srgb, var(--fg) 5%, var(--surface-2));
+  --f-display: var(--f-text);
+  --font-body: var(--f-text); /* the result plots read this */
+  --logo-filter: none;
+  --ease: cubic-bezier(0.2, 0, 0, 1);
+  /* how a control sits on the page: raised, raised a touch more under the cursor, pressed in */
+  --raised: 0 0 0 0.5px color-mix(in srgb, var(--fg) 18%, transparent), 0 1px 1px color-mix(in srgb, var(--fg) 7%, transparent);
+  --raised-more: 0 0 0 0.5px color-mix(in srgb, var(--fg) 24%, transparent), 0 1px 2px color-mix(in srgb, var(--fg) 10%, transparent);
+  --sunk: inset 0 0 0 0.5px color-mix(in srgb, var(--fg) 22%, transparent), inset 0 1px 1px color-mix(in srgb, var(--fg) 12%, transparent);
+  --well: inset 0 0 0 0.5px color-mix(in srgb, var(--fg) 14%, transparent), inset 0 1px 1px color-mix(in srgb, var(--fg) 5%, transparent);
+  --lift: 0px;
+  --press: translateY(0.5px);
+  /* a slide, sitting on the page */
+  --plate: 0 0 0 0.5px color-mix(in srgb, var(--fg) 14%, transparent), 0 1px 2px color-mix(in srgb, var(--fg) 8%, transparent), 0 10px 24px -14px color-mix(in srgb, var(--fg) 30%, transparent);
+  /* the light that follows the cursor, on the surface and along the edge */
+  --shine: rgb(255 255 255 / 0.5);
+  --shine-edge: color-mix(in srgb, var(--fg) 16%, transparent);
+  /* each section can have its own colour: give --c2 to --c6 their own values */
+  --c1: var(--title); --c2: var(--c1); --c3: var(--c1); --c4: var(--c1); --c5: var(--c1); --c6: var(--c1);
+  --sec-ink: #000;
+  color-scheme: light;
+}
+.dark {
+  --logo-filter: invert(1) brightness(1.7); --sec-ink: #fff; color-scheme: dark;
+  --raised: inset 0 1px 0 rgb(255 255 255 / 0.09), 0 0 0 0.5px rgb(0 0 0 / 0.5), 0 1px 2px rgb(0 0 0 / 0.45), 0 2px 6px -2px rgb(0 0 0 / 0.5);
+  --raised-more: inset 0 1px 0 rgb(255 255 255 / 0.13), 0 0 0 0.5px rgb(0 0 0 / 0.55), 0 2px 3px rgb(0 0 0 / 0.4), 0 6px 14px -4px rgb(0 0 0 / 0.65);
+  --sunk: inset 0 1px 3px rgb(0 0 0 / 0.6), inset 0 0 0 0.5px rgb(0 0 0 / 0.4);
+  --well: inset 0 1px 2px rgb(0 0 0 / 0.4), inset 0 0 0 0.5px rgb(255 255 255 / 0.05);
+  --hover: color-mix(in srgb, var(--accent) 16%, var(--surface-2));
+  --lift: -1px;
+  --press: translateY(1px) scale(0.985);
+  --plate: 0 0 0 0.5px rgb(255 255 255 / 0.08), 0 1px 2px rgb(0 0 0 / 0.5), 0 10px 24px -14px rgb(0 0 0 / 0.8);
+  --shine: rgb(255 255 255 / 0.055);
+  --shine-edge: rgb(255 255 255 / 0.2);
+}
+
+/* ---------- base ---------- */
+* { box-sizing: border-box; }
+/* no bounce at the ends of a page, or of anything inside one */
+html, body { overscroll-behavior: none; }
+html { scroll-behavior: smooth; scroll-padding-top: 76px; accent-color: var(--accent); caret-color: var(--accent); -webkit-tap-highlight-color: color-mix(in srgb, var(--accent) 20%, transparent); }
+body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--f-text); font-size: 17px; font-weight: var(--w-text); line-height: 1.6; font-synthesis: none; font-kerning: normal; font-feature-settings: "calt", "liga", "kern"; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+h1, h2, h3 { font-family: var(--f-display); font-weight: var(--w-head); letter-spacing: -0.012em; line-height: 1.12; margin: 0; text-wrap: balance; }
+b, strong { font-weight: var(--w-strong); }
+p, li, figcaption { text-wrap: pretty; }
+a { color: var(--accent); text-decoration-thickness: 0.07em; text-underline-offset: 0.16em; }
+img, video { border-radius: var(--radius); }
+.logos img, .f-logos img, .t-logos img, .e-logos img { border-radius: 0; }
+[hidden] { display: none !important; }
+/* controls that are filled in by script keep their size until they are */
+[data-theme-picker]:empty { display: inline-block; width: 128px; height: 40px; }
+[data-sound-toggle]:empty { display: inline-block; width: 40px; height: 40px; }
+ul[role="list"], ol[role="list"] { list-style: none; margin: 0; padding: 0; }
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 1ms !important; transition-duration: 1ms !important; scroll-behavior: auto !important; }
+}
+
+/* the accent marks where you are: the keyboard's focus and your selection, on every element */
+:focus-visible { outline: 2px solid var(--accent) !important; outline-offset: 2px; }
+::selection { background: color-mix(in srgb, var(--accent) 32%, transparent); }
+
+/* for screen readers only */
+.sr { position: absolute !important; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+/* appears on the first Tab */
+.skip { position: fixed; left: 12px; top: -80px; z-index: 60; }
+.skip:focus { top: 12px; }
+
+/* ---------- one button, everywhere: it stands off the page, lifts under the cursor and goes in when
+   pressed. aria-pressed marks a control that's on, and stays in. ---------- */
+.btn, .theme-picker button, .sound-toggle {
+  appearance: none;
+  position: relative;
+  isolation: isolate;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  box-shadow: var(--raised);
+  color: var(--fg);
+  font: var(--w-strong) 15px/1 var(--f-text);
+  letter-spacing: 0.002em;
+  text-decoration: none;
+  cursor: pointer;
+  white-space: nowrap;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+  transition: background 140ms, color 140ms, box-shadow 160ms var(--ease), transform 160ms var(--ease);
+}
+.btn:hover, .theme-picker button:hover, .sound-toggle:hover { background: var(--hover); color: var(--fg); box-shadow: var(--raised-more); transform: translateY(var(--lift)); }
+.btn:active, .theme-picker button:active, .sound-toggle:active { box-shadow: var(--sunk); transform: var(--press); transition-duration: 40ms; }
+.btn[aria-pressed="true"], .theme-picker button[aria-pressed="true"], .sound-toggle[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); box-shadow: var(--sunk); transform: none; --shine: rgb(255 255 255 / 0.1); --shine-edge: rgb(255 255 255 / 0.25); }
+.btn svg { width: 16px; height: 16px; }
+.btn svg[data-fa], .link-card svg[data-fa] { width: 19px; height: 19px; flex: none; }
+svg[data-fa]:empty { visibility: hidden; } /* it holds its place until the icons load */
+.no-fa svg[data-fa]:empty { display: none; }
+/* a press always lands on the control, even if it redraws its icon */
+.btn svg, .sound-toggle svg, .theme-picker svg, .link-card svg { pointer-events: none; }
+.btn[disabled] { opacity: 0.4; pointer-events: none; box-shadow: none; }
+.theme-picker { display: inline-flex; gap: 4px; }
+.theme-picker button, .sound-toggle { width: 40px; padding: 0; }
+.sound-toggle svg { display: block; }
+/* a setting, not a state of the talk, so it stays quiet whether on or off */
+.sound-toggle[aria-pressed] { background: transparent; box-shadow: none; color: var(--fg-2); transform: none; }
+.sound-toggle[aria-pressed]:hover { background: var(--surface-2); box-shadow: var(--raised); color: var(--fg); }
+.sound-toggle[aria-pressed]:active { box-shadow: var(--sunk); transform: var(--press); }
+.sound-toggle[aria-pressed="false"] { color: var(--fg-3); }
+
+/* the sound switch on a page with no header: always there, stepping back while you read down */
+.page-tools { position: fixed; top: 12px; right: 14px; z-index: 45; display: flex; border-radius: var(--radius); background: color-mix(in srgb, var(--bg) 66%, transparent); -webkit-backdrop-filter: blur(14px) saturate(1.3); backdrop-filter: blur(14px) saturate(1.3); transition: opacity 240ms var(--ease), transform 240ms var(--ease); }
+.page-tools.receded { opacity: 0.7; transform: scale(0.94); }
+.page-tools:hover, .page-tools:focus-within { opacity: 1; transform: none; }
+
+/* the light that follows the cursor (shared/tactile.js sets --mx, --my and .lit) */
+.lit-able::before, .lit-able::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; opacity: 0; transition: opacity 220ms var(--ease); }
+.lit-able::after { z-index: -1; background: radial-gradient(72px circle at var(--mx, 50%) var(--my, 50%), var(--shine), transparent 75%); }
+.lit-able::before { padding: 1px; background: radial-gradient(56px circle at var(--mx, 50%) var(--my, 50%), var(--shine-edge), transparent 80%); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); }
+.lit-able.lit::after, .lit-able.lit::before { opacity: 1; transition-duration: 80ms; }
+.lit-able.near::before { opacity: 0.45; transition-duration: 80ms; }
+
+/* ---------- one field, everywhere ---------- */
+.field { display: block; width: 100%; min-height: 44px; padding: 10px 14px; border: 0; border-radius: var(--radius); background: var(--surface-2); box-shadow: var(--well); color: var(--fg); font: var(--w-text) 16px/1.4 var(--f-text); }
+.field::placeholder { color: var(--fg-3); }
+.field:focus-visible { outline-offset: -2px; } /* inside the field, so a scrolling parent can't clip it */
+textarea.field { min-height: 88px; resize: vertical; }
+
+/* ---------- a question, wherever it's shown ---------- */
+.ask-form { display: grid; gap: 8px; }
+.ask-form .row { display: flex; gap: 8px; align-items: stretch; }
+.ask-form .row .field { flex: 1; min-width: 0; }
+.q-list { display: grid; gap: 14px; }
+.q { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 14px; align-items: start; }
+.q p { margin: 0; font-size: 16px; line-height: 1.4; overflow-wrap: anywhere; }
+.q small { display: block; margin-top: 2px; font-size: 13.5px; color: var(--fg-3); }
+.q .q-answer { margin-top: 6px; font-size: 15px; color: var(--fg-2); }
+.q .q-answer b { color: var(--accent); }
+.q-note, .q-empty { margin: 0; font-size: 14px; color: var(--fg-3); }
+.q-note:empty { display: none; }
+
+/* ---------- the footer on every page ---------- */
+.site-foot { max-width: 780px; margin: 64px auto 0; padding: 12px 20px 56px; display: flex; flex-wrap: wrap; gap: 20px 32px; align-items: center; justify-content: space-between; }
+.site-foot p { margin: 0; font-size: 13px; color: var(--fg-3); line-height: 1.5; }
+.site-foot .made { width: 100%; font-size: 14px; color: var(--fg-2); text-align: center; }
+.made svg { display: inline-block; width: 15px; height: 15px; margin: 0 1px; vertical-align: -2px; color: var(--accent); --fa-secondary-opacity: 1; }
+.made a { color: inherit; font-weight: var(--w-strong); text-decoration: none; }
+.made a:hover { color: var(--accent); }
+.logos { display: flex; align-items: center; gap: 26px; flex-wrap: wrap; }
+.logos img { height: 30px; width: auto; display: block; }
+.logos img.mono { filter: var(--logo-filter); opacity: 0.85; }
+.foot-end { display: flex; align-items: center; gap: 6px; margin-bottom: 18px; }
+.foot-end .theme-picker { margin-left: auto; }
+
+/* ---------- headings of a page ---------- */
+.page-title { font-size: clamp(31px, 5vw, 44px); font-weight: var(--w-display); line-height: 1.12; letter-spacing: -0.018em; margin: 16px 0 14px; }
+.page-sub { font-size: clamp(18px, 2.4vw, 21px); line-height: 1.42; letter-spacing: -0.004em; color: var(--fg-2); margin: 0 0 24px; max-width: 58ch; }
+.section-title { margin: 0 0 12px; font-size: 25px; font-weight: var(--w-head); letter-spacing: -0.014em; color: var(--sec-text); }
+.prose { font-size: 17.5px; line-height: 1.66; }
+.prose p { margin: 0 0 14px; max-width: 66ch; }
+p.prose { margin: 0 0 16px; max-width: 66ch; }
+
+/* ---------- paper page ---------- */
+.page { max-width: 780px; margin: 0 auto; padding: 56px 20px 40px; }
+.page > .section { margin-top: 52px; }
+.page > .section { --sec-text: color-mix(in srgb, var(--sec, var(--c1)) 78%, var(--sec-ink)); }
+.page .bibtex { background: var(--surface-2); box-shadow: var(--well); }
+.actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.authors { display: flex; flex-wrap: wrap; gap: 8px 24px; margin: 0 0 14px; }
+.venue { margin: 0 0 24px; font-size: 15.5px; line-height: 1.45; color: var(--fg-2); }
+.authors .author { display: flex; align-items: center; gap: 12px; padding: 0; border-radius: var(--radius); color: var(--fg); text-decoration: none; transition: color 140ms; }
+.authors .author:hover { color: var(--accent); }
+.authors .author:hover b { color: inherit; }
+.authors .author img { width: 44px; height: 44px; border-radius: var(--radius); object-fit: cover; background: var(--surface-2); }
+.authors .author b { display: block; font-size: 15.5px; line-height: 1.25; }
+.authors .author small { display: block; font-size: 13.5px; line-height: 1.3; color: var(--fg-3); }
+.keywords { margin: 0; max-width: 66ch; font-size: 17px; line-height: 1.6; }
+.cite-line { margin: 0 0 16px; max-width: 66ch; font-size: 16.5px; line-height: 1.55; }
+.links { display: grid; gap: 10px; }
+.link-card { position: relative; isolation: isolate; display: flex; align-items: center; gap: 14px; padding: 10px 16px 10px 10px; border-radius: var(--radius); background: var(--surface-2); box-shadow: var(--raised); color: var(--fg); text-decoration: none; touch-action: manipulation; transition: background 140ms, box-shadow 160ms var(--ease), transform 160ms var(--ease); }
+.link-card:hover { background: var(--hover); box-shadow: var(--raised-more); transform: translateY(var(--lift)); }
+.link-card:active { box-shadow: var(--sunk); transform: var(--press); transition-duration: 40ms; }
+.link-card .ico { width: 40px; height: 40px; flex: none; border-radius: calc(var(--radius) * 0.7); color: var(--sec-text); display: grid; place-items: center; }
+.link-card .ico svg { width: 20px; height: 20px; }
+.link-card > span:nth-child(2) > b { display: block; font-size: 15.5px; line-height: 1.3; color: var(--fg); }
+.link-card > span:nth-child(2) > span { display: block; font-size: 14px; line-height: 1.35; color: var(--fg-2); }
+.link-card .go { margin-left: auto; color: var(--fg-3); }
+.figure { margin-left: 0; margin-right: 0; }
+.figure img { display: block; width: 100%; height: auto; border-radius: var(--radius); outline: 1px solid color-mix(in srgb, var(--fg) 12%, transparent); outline-offset: -1px; }
+.figure figcaption { max-width: 72ch; padding: 12px 0 0; font-size: 14.5px; line-height: 1.5; color: var(--fg-2); }
+.bibtex { position: relative; padding: 18px 20px; border-radius: var(--radius); }
+.bibtex pre { margin: 0; overflow-x: auto; font: 12.5px/1.6 ui-monospace, "SF Mono", Menlo, monospace; color: var(--fg-2); }
+.bibtex .btn { position: absolute; top: 12px; right: 12px; font-size: 13.5px; }
+
+/* scroll progress, in place of scrollbars */
+html, .toc-inner, .page-toc { scrollbar-width: none; }
+html::-webkit-scrollbar, .toc-inner::-webkit-scrollbar, .page-toc::-webkit-scrollbar { display: none; }
+.page-bar { position: fixed; left: 0; right: 0; top: 0; height: 4px; z-index: 40; }
+.page-bar i { display: block; height: 100%; background: var(--title); transform-origin: left; transform: scaleX(0); }
+.page-toc { position: fixed; top: 96px; left: calc(50% + 420px); width: 210px; max-height: calc(100vh - 140px); overflow-y: auto; font-size: 14.5px; line-height: 1.3; }
+.page-toc a { display: block; padding: 6px 10px; border-radius: var(--radius); color: var(--fg-2); text-decoration: none; transition: background 140ms; }
+.page-toc a:hover { background: var(--surface-2); }
+@media (max-width: 1240px) { .page-toc { display: none; } }
+/* a rail beside a contents list, filling as you read */
+.toc ol, .page-toc ol { position: relative; list-style: none; margin: 0; padding: 0 0 0 16px; }
+.toc ol::after, .page-toc ol::after { content: ""; position: absolute; left: 0; top: 0; width: 3px; height: var(--fill, 0); border-radius: var(--radius); background: var(--rail, var(--c1)); }
+.toc a.here, .page-toc a.here { color: color-mix(in srgb, var(--sec, var(--c1)) 78%, var(--sec-ink)); background: color-mix(in srgb, var(--sec, var(--c1)) 13%, var(--bg)); font-weight: var(--w-head); }
+
+/* ---------- script page ---------- */
+/* the slide stays pinned; the script scrolls beneath it */
+.talk-stage { position: sticky; top: 0; z-index: 25; isolation: isolate; padding: 12px 16px 10px; background: var(--bg); }
+.talk-stage-inner { width: min(100%, calc(min(48vh, 560px) * 16 / 9)); margin: 0 auto; }
+.deck-frame { position: relative; aspect-ratio: 16 / 9; overflow: hidden; border-radius: var(--radius); background: var(--surface-2); box-shadow: var(--plate); }
+.deck-frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.slide-progress { display: flex; gap: 4px; height: 6px; margin-top: 8px; }
+.slide-progress span { position: relative; overflow: hidden; border-radius: var(--radius); background: color-mix(in srgb, var(--sec) 12%, var(--bg)); }
+.slide-progress i { position: absolute; left: 0; top: 0; bottom: 0; width: var(--p, 0%); background: var(--sec); }
+.stage-bar { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 14px; color: var(--fg-2); }
+.stage-bar .btn, .stage-bar .sound-toggle { flex: none; }
+.stage-bar [data-go] { width: 40px; padding: 0; font-size: 19px; }
+.stage-bar .pos { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-variant-numeric: tabular-nums; }
+.presenting .live-btn { display: none !important; }
+.talk-layout { display: grid; grid-template-columns: minmax(0, 720px) 250px; gap: 56px; justify-content: center; padding: 0 20px; }
+.talk-main { min-width: 0; }
+.talk-hero { padding: 36px 0 4px; }
+.talk-intro { margin: 0; color: var(--fg-2); max-width: 62ch; }
+/* ---------- what's on its way: the same shape, gently pulsing, so nothing moves when it arrives ---------- */
+.skel { display: block; border-radius: 6px; background: var(--line); animation: skel 1.1s ease-in-out infinite alternate; }
+@keyframes skel { from { opacity: 0.45; } to { opacity: 1; } }
+.skel-line { height: 13px; margin: 14px 0; list-style: none; }
+.skel-head { width: 46%; height: 24px; margin: 38px 0 16px; }
+.skel-script { padding: 14px 0; }
+.toc ol[data-loading] { padding-top: 4px; }
+.deck-frame::before { content: ""; position: absolute; inset: 0; background: var(--line); animation: skel 1.1s ease-in-out infinite alternate; }
+.deck-frame.ready::before { display: none; }
+/* a section: its heading on the right, the paragraphs on the page */
+.chapter { --sec-text: color-mix(in srgb, var(--sec, var(--c1)) 78%, var(--sec-ink)); margin-top: 52px; scroll-margin-top: calc(var(--stage-h, 0px) + 24px); }
+.chapter > .section-title { margin: 0 0 18px; font-size: 34px; text-align: right; }
+.chapter > .section-title .sub { display: block; margin-top: 4px; font-size: 16px; font-weight: var(--w-strong); letter-spacing: 0; color: var(--fg-3); }
+.entry { padding: 14px 0 6px; scroll-margin-top: calc(var(--stage-h, 0px) + 24px); cursor: pointer; }
+.entry h3 { display: flex; flex-wrap: wrap; gap: 12px; align-items: baseline; margin-bottom: 10px; font-size: 26px; font-weight: var(--w-head); letter-spacing: -0.015em; color: var(--fg); }
+.entry h3 .n { font-size: 14px; font-weight: var(--w-strong); color: var(--fg-3); font-variant-numeric: tabular-nums; }
+.entry-go { all: unset; cursor: pointer; border-radius: var(--radius); }
+/* the entry you're reading (or the one on screen) takes its section's colour */
+.entry.reading h3, .entry.live h3 { color: var(--sec-text); }
+.entry .live-tag { display: none; margin-left: auto; font-size: 13px; font-weight: var(--w-strong); color: var(--accent); }
+.entry.live .live-tag { display: inline; }
+.script p { line-height: 1.6; }
+.script .click { all: unset; cursor: pointer; display: inline-block; margin-right: 4px; padding: 0 8px; border-radius: var(--radius); background: var(--surface-2); color: var(--fg-2); font-size: 12px; font-weight: var(--w-strong); line-height: 1.7; vertical-align: 0.12em; transition: background 200ms var(--ease), color 200ms var(--ease); }
+.script .click:hover { background: var(--hover); color: var(--fg); }
+.script .click.at { background: var(--accent); color: var(--on-accent); }
+/* questions under each entry */
+.qs { margin-top: 6px; isolation: isolate; cursor: auto; }
+.qs summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 10px; min-height: 40px; border-radius: var(--radius); font-size: 15px; font-weight: var(--w-strong); color: var(--fg-2); }
+.qs summary::-webkit-details-marker { display: none; }
+.qs summary::before { content: "+"; content: "+" / ""; width: 22px; text-align: center; font-size: 20px; line-height: 1; transition: transform 200ms var(--ease); }
+.qs[open] summary::before { transform: rotate(45deg); }
+.qs .count { margin-left: auto; min-width: 28px; height: 28px; padding: 0 8px; border-radius: var(--radius); display: grid; place-items: center; background: var(--surface-2); font-size: 13.5px; font-variant-numeric: tabular-nums; }
+.qs .count.has { background: color-mix(in srgb, var(--accent) 16%, var(--bg)); color: var(--accent); }
+.qs-body { padding: 8px 0 14px; display: grid; gap: 16px; }
+/* the contents beside the script: wraps, never scrolls sideways, follows what you're reading */
+.toc-inner { z-index: 25; position: sticky; top: calc(var(--stage-h, 0px) + 16px); max-height: calc(100vh - var(--stage-h, 0px) - 16px); overflow: hidden auto; padding: 24px 6px 24px 0; }
+.toc .ch { margin: 18px 0 4px; font-size: 15px; font-weight: var(--w-head); color: color-mix(in srgb, var(--sec, var(--c1)) 78%, var(--sec-ink)); }
+.toc .ch:first-of-type { margin-top: 0; }
+.toc a { display: flex; gap: 10px; align-items: center; min-width: 0; padding: 4px 8px; border-radius: var(--radius); color: var(--fg-2); font-size: 14.5px; line-height: 1.3; overflow-wrap: anywhere; text-decoration: none; }
+.toc a span { min-width: 0; }
+.toc a:hover { background: var(--surface-2); color: var(--fg); }
+.toc a.live { color: var(--title); }
+.toc a .qn { margin-left: auto; font-size: 12.5px; color: var(--accent); }
+@media (max-width: 1080px) { .talk-layout { grid-template-columns: minmax(0, 720px); } .toc { display: none; } }
+@media (max-width: 700px) {
+  .talk-stage { padding: 0 0 6px; }
+  .talk-stage-inner { width: 100%; }
+  .stage-bar { padding: 0 12px; margin-top: 6px; }
+  .talk-hero { padding-top: 24px; }
+}
+
+/* colour words: blue you, orange partner, pink both (slides and script) */
+mark.you { background: color-mix(in srgb, var(--you) 30%, transparent); }
+mark.partner { background: color-mix(in srgb, var(--partner) 34%, transparent); }
+mark.both { background: color-mix(in srgb, var(--both) 30%, transparent); }
+mark.you, mark.partner, mark.both { color: inherit; padding: 0 0.14em; border-radius: var(--radius); }
+
+/* ---------- scrolling: every list scrolls smoothly and text dissolves at its edges ---------- */
+.toc-inner, .page-toc, .pq-list, .pv-notes, .pv-left, .hv-sheet .q-list { scroll-behavior: smooth; overscroll-behavior: none; }
+/* shared/tactile.js sets how much to fade, and only where there's more to see */
+.soft-edges { --fade-t: 0px; --fade-b: 0px; -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 var(--fade-t), #000 calc(100% - var(--fade-b)), transparent 100%); mask-image: linear-gradient(to bottom, transparent 0, #000 var(--fade-t), #000 calc(100% - var(--fade-b)), transparent 100%); }
+/* text softens as it leaves the page, under one blur and a fade. A single fixed layer stays steady while
+   scrolling; stacking several of these is what flickers */
+.edge-blur { position: fixed; left: 0; right: 0; height: 40px; z-index: 24; pointer-events: none; }
+.edge-blur::before, .edge-blur::after { content: ""; position: absolute; inset: 0; }
+.edge-blur::before { -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); }
+.edge-blur.top { top: var(--stage-h, 0px); }
+.talk-page .edge-blur.top { visibility: hidden; } /* until the slide area has been measured */
+.stage-known .talk-page .edge-blur.top { visibility: visible; }
+.edge-blur.top::before { -webkit-mask-image: linear-gradient(to bottom, #000 30%, transparent); mask-image: linear-gradient(to bottom, #000 30%, transparent); }
+.edge-blur.top::after { background: linear-gradient(to bottom, var(--bg), transparent); }
+.edge-blur.foot { bottom: 0; }
+.edge-blur.foot::before { -webkit-mask-image: linear-gradient(to top, #000 30%, transparent); mask-image: linear-gradient(to top, #000 30%, transparent); }
+.edge-blur.foot::after { background: linear-gradient(to top, var(--bg), transparent); }
+@media (prefers-reduced-transparency: reduce) {
+  .page-tools { background: var(--bg); -webkit-backdrop-filter: none; backdrop-filter: none; }
+  .edge-blur { display: none; }
+}
+@media print { .edge-blur, .page-tools { display: none !important; } }
+
+/* ---------- likes, visits and how fast they're coming in ---------- */
+/* the count has room from the start, and 9 to 10 doesn't move anything */
+.like-btn .n { display: inline-block; min-width: 3ch; text-align: left; font-variant-numeric: tabular-nums; }
+/* Font Awesome's duotone heart is all in its pale layer: make it solid */
+.like-btn svg { color: var(--accent); --fa-secondary-opacity: 1; }
+.like-btn[aria-pressed="true"] svg { color: inherit; }
+.like-btn[aria-busy] { cursor: default; }
+.like-btn[aria-busy] .n { color: transparent; border-radius: 4px; background: var(--line); animation: skel 1.1s ease-in-out infinite alternate; }
+.like-btn.off, .reach.off > p, .reach.off > .vel { visibility: hidden; }
+.like-row { margin: 14px 0 0; }
+.star-row { margin: 2px 0 0; }
+/* Font Awesome's duotone star, made solid */
+.star-btn svg { color: var(--title); --fa-secondary-opacity: 1; --fa-primary-opacity: 1; }
+.reach { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; min-height: 44px; margin: 12px 0 0; font-size: 14.5px; color: var(--fg-2); }
+.reach > p { width: 230px; margin: 0; white-space: nowrap; }
+.reach[aria-busy] > p b, .reach[aria-busy] > p span { display: inline-block; height: 12px; border-radius: 4px; background: var(--line); vertical-align: -1px; animation: skel 1.1s ease-in-out infinite alternate; }
+.reach[aria-busy] > p b { width: 58px; }
+.reach[aria-busy] > p span { width: 104px; }
+.reach[aria-busy] svg { border-radius: 6px; background: var(--line); animation: skel 1.1s ease-in-out infinite alternate; }
+.reach > p b { color: var(--fg); font-variant-numeric: tabular-nums; }
+.reach > p span { margin-left: 6px; }
+.vel { position: relative; width: 220px; }
+.vel svg { display: block; width: 100%; height: 44px; overflow: visible; touch-action: none; }
+.vel-line { fill: none; stroke: var(--title); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.vel-area { fill: color-mix(in srgb, var(--title) 12%, transparent); }
+.vel-cross { stroke: var(--fg-3); stroke-width: 1; }
+.vel-dot { fill: var(--title); stroke: var(--bg); stroke-width: 2; }
+.vz-tip { position: absolute; bottom: calc(100% + 6px); z-index: 5; padding: 3px 8px; border-radius: 6px; background: var(--fg); color: var(--bg); font-size: 12.5px; line-height: 1.35; white-space: nowrap; pointer-events: none; }
+
+@media (max-width: 640px) { .stage-bar .like-btn span { display: none; } }
+
+/* ---------- hold ⌘: a key on every control ---------- */
+.key-layer { position: fixed; inset: 0; z-index: 90; pointer-events: none; }
+.key-hint { position: fixed; min-width: 18px; padding: 1px 5px; border-radius: 5px; background: var(--fg); color: var(--bg); font: var(--w-strong) 12px/1.35 var(--f-text); text-align: center; font-variant-numeric: tabular-nums; box-shadow: 0 1px 2px rgb(0 0 0 / 0.3); }
+.key-hint.dim { opacity: 0.2; }
+.keys-on .hv-fab { opacity: 1; }
+@media print { .key-layer { display: none !important; } }

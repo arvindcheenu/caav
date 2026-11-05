@@ -61,6 +61,9 @@ export class Instance {
   }
 
   createView(attached: AttachedTarget, setup: ViewSetup) {
+    attached.object.updateWorldMatrix(true, false);
+    const centre = attached.bounds.getCenter(new Vector3()).applyMatrix4(attached.object.matrixWorld); // bounds are in the object's own space
+    this.pilot.retarget(centre, attached.bounds.getSize(new Vector3()).length() / 2);
     this.view = createAttentionView({
       ...setup,
       session: this.session,

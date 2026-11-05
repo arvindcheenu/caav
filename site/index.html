@@ -5,42 +5,42 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>caav: attention awareness for 3D objects</title>
     <meta name="description" content="A small JavaScript library that attaches attention to three.js objects, records it per person, and shows it in every mode of the HeedVision design space." />
-    <link rel="stylesheet" href="./style.css" />
+    <!-- chrome-head -->
   </head>
   <body>
-    <header class="hero">
-      <h1>caav</h1>
-      <p class="lead">Attach attention to any 3D object, record it per person, and show it back.</p>
-      <p class="quiet">The toolkit from <a href="https://heedvision.arvindchee.nu/">HeedVision</a>, IEEE VIS 2026. CAAV stands for collaborative attention-aware visualization.</p>
-      <nav class="site-nav" aria-label="Site">
-        <a href="./docs/">Docs</a>
-        <a href="https://github.com/arvindcheenu/caav">Source on GitHub</a>
-        <a href="#try-it">Try it</a>
-        <a href="#examples">Examples</a>
-        <a href="./llms.txt">llms.txt</a>
-        <a href="./AGENTS.md">AGENTS.md</a>
-      </nav>
-    </header>
+    <!-- chrome-top -->
+    <nav class="page-toc" aria-label="Contents" data-headings="#try-it-heading, #examples .prose h3"><ol role="list"></ol></nav>
 
-    <main>
-      <section id="try-it" aria-labelledby="try-it-heading">
-        <h2 id="try-it-heading">Try it</h2>
-        <p class="reading">Each view is one person looking at the same object, recording attention from their head direction. Give each person their own settings in the panel. Drag a view to steer that person, or focus it and use the arrow keys.</p>
-        <div id="playground"></div>
-        <noscript><p>The playground needs JavaScript and WebGL. The examples below and the docs do not.</p></noscript>
+    <main class="page" id="main">
+      <h1 class="toolkit-title">caav</h1>
+      <p class="page-sub">Attach attention to any 3D object, record it per person, and show it back.</p>
+      <p class="venue">The toolkit from <a href="https://heedvision.arvindchee.nu/">HeedVision</a>. CAAV stands for collaborative attention-aware visualization.</p>
+
+      <div class="actions">
+        <a class="btn" href="./docs/"><svg data-fa="file-lines" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2z"/><path d="M9 17h6"/><path d="M9 13h6"/></svg> Docs</a>
+        <a class="btn star-btn" href="https://github.com/arvindcheenu/caav" target="_blank" rel="noopener"><svg data-fa="star" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3 6.4 20.2l1.1-6.2L3 9.6l6.2-.9z"/></svg> Star caav on GitHub</a>
+        <a class="btn" href="https://heedvision.arvindchee.nu/"><svg data-fa="presentation-screen" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v10a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2z"/><path d="M7 21h10"/><path d="M12 17v4"/></svg> Paper</a>
+        <a class="btn" href="./llms.txt">llms.txt</a>
+        <a class="btn" href="./AGENTS.md">AGENTS.md</a>
+      </div>
+
+      <section class="section" id="try-it" aria-labelledby="try-it-heading">
+        <h2 class="section-title" id="try-it-heading">Try it</h2>
+        <p class="prose">Each view is one person looking at the same object, recording attention from their head direction. Give each person their own settings in the floating panel, which you can drag by its title bar. Drag a view to steer that person, or focus it and use the arrow keys.</p>
+        <div id="playground" class="wide"><!-- playground --></div>
+        <noscript><p>The playground needs JavaScript and WebGL. The examples below and the docs do not.</p><style>.stage.skel { animation: none; }</style></noscript>
       </section>
 
-      <section id="examples" class="reading">
-        <h2>Examples</h2>
-        <!-- landing -->
+      <section class="section" id="examples">
+        <h2 class="section-title">Examples</h2>
+        <div class="prose">
+          <!-- landing -->
+        </div>
       </section>
     </main>
 
-    <footer>
-      <p>Built for the paper <a href="https://heedvision.arvindchee.nu/">HeedVision: Attention Awareness in Collaborative Immersive Analytics Environments</a>. Works with three.js, with optional React Three Fiber hooks. The core has no dependencies.</p>
-      <p><a href="https://github.com/arvindcheenu/caav">Source on GitHub</a>, under the <a href="./LICENSE.txt">MIT License</a>. This page uses the SN Pro font, under the <a href="./fonts/OFL.txt">SIL Open Font License</a>.</p>
-    </footer>
-
+    <!-- chrome-foot -->
+    <script type="module" src="./page.ts"></script>
     <script type="module" src="./playground/app.tsx"></script>
   </body>
 </html>

@@ -5,6 +5,19 @@ import type { PresentationKind } from "caav/three";
 
 export type TooltipEvent = "off" | "dwell" | "jointstart" | "gazeenter";
 
+export type ObjectName = "terrain" | "bars" | "protein" | "scatter";
+
+/**
+ * The objects you can look at. Each has its own voxel size: sparse points need bigger voxels than a surface,
+ * or a head ray would mostly pass between them.
+ */
+export const OBJECTS: Record<ObjectName, { label: string; voxelSize: number }> = {
+  terrain: { label: "Terrain (one mesh)", voxelSize: 0.08 },
+  bars: { label: "Bars (a group)", voxelSize: 0.08 },
+  protein: { label: "Generated protein", voxelSize: 0.08 },
+  scatter: { label: "Scatterplot (100)", voxelSize: 0.1 },
+};
+
 export interface PersonSettings {
   colour: string;
   presentation: PresentationKind;
@@ -19,7 +32,7 @@ export interface PersonSettings {
 }
 
 export interface GroupSettings {
-  object: "terrain" | "bars";
+  object: ObjectName;
   voxelSize: number;
   influenceRadius: number;
   gain: number;
@@ -52,6 +65,22 @@ export const START_PRESENTATIONS: Record<string, PresentationKind> = {
   c: "world-separated",
   d: "camera-embedded",
 };
+
+/** Where a person starts. The controls, the first paint of the code panel and the build's shell all read this. */
+export function startPerson(id: string): PersonSettings {
+  return {
+    colour: START_COLOURS[id],
+    presentation: START_PRESENTATIONS[id],
+    trigger: "always",
+    show: false,
+    hold: 2,
+    accumulator: "sum",
+    threshold: 0.05,
+    tooltip: "off",
+  };
+}
+
+export const START_PEOPLE = 2;
 
 export const START_GROUP: GroupSettings = {
   object: "terrain",

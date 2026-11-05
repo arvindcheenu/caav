@@ -135,6 +135,12 @@ export class AttentionView {
     this.stale = true;
   }
 
+  /** Changes the neutrals drawn around attention, for a theme switch. A moved miniature keeps its place. */
+  setStyle(style: PresentationStyle) {
+    this.context.style = style;
+    this.rebuild();
+  }
+
   /** Runs the trigger and redraws what changed. Call once per frame, after `session.tick`. */
   update(dt: number) {
     const { session, viewer, attached, camera } = this.options;

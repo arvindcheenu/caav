@@ -96,7 +96,7 @@ Attention is stored in the object's local space, so it stays on the object when 
 
 ### Voxel resolution
 
-Smaller voxels show finer detail, but each view does more work and each voxel takes longer to fill, since a gaze spends less time in any one of them. Change the size at any time:
+Smaller voxels show finer detail, but each view does more work and each voxel takes longer to fill, since a gaze spends less time in any one of them. Sparse objects need bigger voxels: a head ray mostly passes between the points of a scatterplot, and a voxel only exists where it touches geometry. The playground uses 0.08 for its surfaces and 0.1 for its scatterplot of 100 points, spheres of radius 0.05 in a box 2 wide. Change the size at any time:
 
 ```ts
 attached.setVoxelSize(0.1);
@@ -447,6 +447,7 @@ The core has no rendering dependency, so you can use it with another engine by b
 | `createAttentionView(options)` | Returns an `AttentionView` |
 | `view.update(dt)` | Runs the trigger and redraws. Call once per frame, after `session.tick` |
 | `view.setPresentation(kind)`, `setTrigger(trigger)`, `setAccumulator(kind)`, `setColourPolicy(policy)`, `setThreshold(value)` | Change one view |
+| `view.setStyle({ surface, ink })` | Changes the neutrals drawn around attention, for a theme switch |
 | `view.visible`, `view.shading`, `view.presentation`, `view.trigger` | Its current state |
 | `view.miniature` | The miniature, when that presentation is active, with `object` and `moveTo(x, y, z)` |
 | `view.dispose()` | Removes its objects from the scene |

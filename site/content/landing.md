@@ -93,3 +93,5 @@ attached.setVoxelSize(0.1);
 ```
 
 The [docs](./docs/) cover all of this in detail, including [how to load the library](./docs/#install), the [API](./docs/#api-reference), and [React Three Fiber hooks](./docs/#react-three-fiber). There is also a [one-file example](./examples/quickstart.html) you can save and open.
+
+The playground's objects are generated: a terrain and bars from one height field, a protein-like clump of spheres that is not a real structure, and a seeded scatterplot of 100 random points, as in the paper's study.

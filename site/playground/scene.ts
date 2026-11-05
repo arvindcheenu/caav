@@ -1,15 +1,24 @@
 import {
   BoxGeometry,
+  BufferGeometry,
   Color,
   DirectionalLight,
+  Float32BufferAttribute,
   Group,
   HemisphereLight,
+  IcosahedronGeometry,
+  InstancedMesh,
+  LineBasicMaterial,
+  LineSegments,
+  Matrix4,
   Mesh,
   MeshStandardMaterial,
   PlaneGeometry,
   Scene,
+  Vector3,
   type Object3D,
 } from "three";
+import { random } from "./pilot";
 
 export interface Theme {
   background: string;
@@ -19,8 +28,17 @@ export interface Theme {
   ink: string;
 }
 
-export const LIGHT_THEME: Theme = { background: "#eceae6", data: "#b9b6ae", surface: "#f6f5f2", ink: "#8b887f" };
-export const DARK_THEME: Theme = { background: "#17181b", data: "#6c7078", surface: "#0e0f12", ink: "#6c7078" };
+export const LIGHT_THEME: Theme = { background: "#faf3ec", data: "#c9bfb4", surface: "#ffffff", ink: "#8f8478" };
+export const DARK_THEME: Theme = { background: "#2a241f", data: "#7b7168", surface: "#1c1815", ink: "#7b7168" };
+
+/** Repaints what the theme colours: the background, and the data's surface. */
+export function applyTheme(scene: Scene, model: Object3D, theme: Theme) {
+  scene.background = new Color(theme.background);
+  model.traverse((child) => {
+    const material = (child as Mesh).material as MeshStandardMaterial | undefined;
+    if (!child.userData.keepsColour) material?.color?.set(theme.data);
+  });
+}
 
 export function createScene(theme: Theme) {
   const scene = new Scene();
@@ -71,5 +89,85 @@ export function createBars(theme: Theme): Object3D {
       group.add(bar);
     }
   }
+  return group;
+}
+
+/** Spheres as one instanced mesh, so a few hundred stay cheap to draw. */
+function createSpheres(spheres: ReadonlyArray<{ position: Vector3; radius: number }>, material: MeshStandardMaterial, detail: number) {
+  const mesh = new InstancedMesh(new IcosahedronGeometry(1, detail), material, spheres.length);
+  const matrix = new Matrix4();
+  spheres.forEach(({ position, radius }, index) => {
+    matrix.makeScale(radius, radius, radius).setPosition(position);
+    mesh.setMatrixAt(index, matrix);
+  });
+  mesh.computeBoundingSphere();
+  return mesh;
+}
+
+/** A point scattered evenly through a ball. */
+function pointInBall(rand: () => number, radius: number): Vector3 {
+  const point = new Vector3(rand() * 2 - 1, rand() * 2 - 1, rand() * 2 - 1);
+  return point.lengthSq() > 1 ? pointInBall(rand, radius) : point.multiplyScalar(radius);
+}
+
+export const PROTEIN_POCKET = new Vector3(0.55, 0.25, 0.8).normalize();
+
+/**
+ * A surface in the spirit of a protein, generated rather than taken from a real structure: a clump of atom-sized
+ * spheres, bumpy all over, with a pocket holding a small contrasting inhibitor. Its point in the paper's
+ * motivation is that every bump looks like the next, so there is nothing to navigate by.
+ */
+export function createProtein(theme: Theme): Object3D {
+  const rand = random(2026);
+  const size = 1;
+  const pocket = PROTEIN_POCKET.clone().multiplyScalar(size * 0.92);
+  // Lobes make the outline lumpy, as a folded chain is, rather than a neat ball.
+  const lobes = Array.from({ length: 7 }, () => ({ centre: pointInBall(rand, size * 0.62), radius: size * (0.34 + rand() * 0.16) }));
+  const atoms: Array<{ position: Vector3; radius: number }> = [];
+  for (let tries = 0; tries < 20000 && atoms.length < 620; tries++) {
+    const lobe = lobes[Math.floor(rand() * lobes.length)];
+    const position = pointInBall(rand, lobe.radius).add(lobe.centre);
+    // Only the outer shell can be seen, so atoms buried deep inside are left out.
+    const buried = lobes.some((other) => other.centre.distanceTo(position) < other.radius * 0.45);
+    if (buried || position.distanceTo(pocket) < size * 0.3) continue;
+    if (atoms.some((atom) => atom.position.distanceToSquared(position) < 0.0064)) continue;
+    atoms.push({ position, radius: size * (0.085 + rand() * 0.035) });
+  }
+  const surface = createSpheres(atoms, new MeshStandardMaterial({ color: theme.data, roughness: 0.42 }), 1);
+
+  const inhibitorAt = PROTEIN_POCKET.clone().multiplyScalar(size * 0.74);
+  const atomsOfInhibitor = Array.from({ length: 7 }, () => ({
+    position: pointInBall(rand, size * 0.09).add(inhibitorAt),
+    radius: size * 0.05,
+  }));
+  const inhibitor = createSpheres(atomsOfInhibitor, new MeshStandardMaterial({ color: "#d8352b", roughness: 0.5 }), 1);
+  inhibitor.userData.keepsColour = true;
+
+  const group = new Group();
+  group.add(surface, inhibitor);
+  group.position.y = size * 1.05; // stands clear of where the other objects' base is
+  return group;
+}
+
+export const SCATTER_POINTS = 100;
+
+/**
+ * A 3D scatterplot of uniformly distributed points, as in the paper's study. Seeded, so it is the same on every
+ * load and for everyone in the scene. The axes are lines, so they don't take attention: only the points do.
+ */
+export function createScatter(theme: Theme): Object3D {
+  const rand = random(100);
+  const side = 2;
+  const points = Array.from({ length: SCATTER_POINTS }, () => ({
+    position: new Vector3((rand() - 0.5) * side, rand() * side * 0.7, (rand() - 0.5) * side),
+    radius: 0.05,
+  }));
+  const group = new Group();
+  group.add(createSpheres(points, new MeshStandardMaterial({ color: theme.data, roughness: 0.6 }), 2));
+
+  const half = side / 2;
+  const axes = new BufferGeometry();
+  axes.setAttribute("position", new Float32BufferAttribute([-half, 0, half, half, 0, half, -half, 0, half, -half, side * 0.7, half, -half, 0, half, -half, 0, -half], 3));
+  group.add(new LineSegments(axes, new LineBasicMaterial({ color: theme.data })));
   return group;
 }
