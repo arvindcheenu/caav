@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>caav: attention awareness for 3D objects</title>
+    <meta name="description" content="A small JavaScript library that attaches attention to three.js objects, records it per person, and shows it in every mode of the HeedVision design space." />
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <header class="hero">
+      <h1>caav</h1>
+      <p class="lead">Attach attention to any 3D object, record it per person, and show it back.</p>
+      <p class="quiet">The toolkit from <a href="https://heedvision.arvindchee.nu/">HeedVision</a>, IEEE VIS 2026. CAAV stands for collaborative attention-aware visualization.</p>
+      <nav class="site-nav" aria-label="Site">
+        <a href="./docs/">Docs</a>
+        <a href="https://github.com/arvindcheenu/caav">Source on GitHub</a>
+        <a href="#try-it">Try it</a>
+        <a href="#examples">Examples</a>
+        <a href="./llms.txt">llms.txt</a>
+        <a href="./AGENTS.md">AGENTS.md</a>
+      </nav>
+    </header>
+
+    <main>
+      <section id="try-it" aria-labelledby="try-it-heading">
+        <h2 id="try-it-heading">Try it</h2>
+        <p class="reading">Each view is one person looking at the same object, recording attention from their head direction. Give each person their own settings in the panel. Drag a view to steer that person, or focus it and use the arrow keys.</p>
+        <div id="playground"></div>
+        <noscript><p>The playground needs JavaScript and WebGL. The examples below and the docs do not.</p></noscript>
+      </section>
+
+      <section id="examples" class="reading">
+        <h2>Examples</h2>
+        <!-- landing -->
+      </section>
+    </main>
+
+    <footer>
+      <p>Built for the paper <a href="https://heedvision.arvindchee.nu/">HeedVision: Attention Awareness in Collaborative Immersive Analytics Environments</a>. Works with three.js, with optional React Three Fiber hooks. The core has no dependencies.</p>
+      <p><a href="https://github.com/arvindcheenu/caav">Source on GitHub</a>, under the <a href="./LICENSE.txt">MIT License</a>. This page uses the SN Pro font, under the <a href="./fonts/OFL.txt">SIL Open Font License</a>.</p>
+    </footer>
+
+    <script type="module" src="./playground/app.tsx"></script>
+  </body>
+</html>

@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>caav quickstart</title>
+    <style>
+      html, body { height: 100%; margin: 0; background: #17181b; }
+      #stage { position: relative; height: 100%; overflow: hidden; }
+      canvas { display: block; width: 100%; height: 100%; }
+    </style>
+    <!-- To use this page elsewhere, change the two caav paths to
+         https://heedvision.arvindchee.nu/toolkit/lib/core/index.js and .../lib/three/index.js -->
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
+          "three-mesh-bvh": "https://cdn.jsdelivr.net/npm/three-mesh-bvh@0.9.18/build/index.module.js",
+          "caav": "../lib/core/index.js",
+          "caav/three": "../lib/three/index.js"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <div id="stage"><canvas></canvas></div>
+    <script type="module">
+      import * as THREE from "three";
+      import { alwaysOn, createSession } from "caav";
+      import { attachAttention, createAttentionView, createSpatialTooltip, headRaySource } from "caav/three";
+
+      const stage = document.querySelector("#stage");
+      const renderer = new THREE.WebGLRenderer({ canvas: document.querySelector("canvas"), antialias: true });
+      renderer.setPixelRatio(Math.min(2, devicePixelRatio));
+
+      const scene = new THREE.Scene();
+      scene.background = new THREE.Color("#17181b");
+      scene.add(new THREE.HemisphereLight(0xffffff, 0x8a8a8a, 2));
+
+      const object = new THREE.Mesh(
+        new THREE.TorusKnotGeometry(0.7, 0.24, 120, 16),
+        new THREE.MeshStandardMaterial({ color: "#6c7078", roughness: 0.9 }),
+      );
+      scene.add(object);
+      const camera = new THREE.PerspectiveCamera(50, 1, 0.05, 50);
+
+      // Attach attention, register one person, and show it to them.
+      const session = createSession({ captureRate: 10, influenceRadius: 1.5 });
+      const attached = attachAttention(session, object, { voxelSize: 0.08 });
+      session.registerViewer({ id: "you", colour: "#3d8bff", source: headRaySource(camera) });
+      const view = createAttentionView({ session, attached, viewer: "you", camera, scene, trigger: alwaysOn() });
+
+      // A tooltip pinned to wherever the gaze rests.
+      const tooltip = createSpatialTooltip({ camera, overlay: stage });
+      session.on("dwell", (event) => tooltip.show(event.point, "You rested here", { seconds: 2 }));
+
+      let last = performance.now();
+      function frame(now) {
+        const dt = (now - last) / 1000;
+        last = now;
+
+        // This stands in for a person's head: an orbit, looking slightly off centre.
+        const t = now / 2500;
+        camera.position.set(Math.sin(t) * 3.4, 1.6, Math.cos(t) * 3.4);
+        camera.lookAt(Math.sin(t * 2.3) * 0.5, Math.sin(t * 1.7) * 0.4, Math.cos(t * 3.1) * 0.5);
+
+        session.tick(dt);
+        view.update(dt);
+        tooltip.update(dt);
+
+        renderer.setSize(stage.clientWidth, stage.clientHeight, false);
+        camera.aspect = stage.clientWidth / stage.clientHeight;
+        camera.updateProjectionMatrix();
+        renderer.render(scene, camera);
+        requestAnimationFrame(frame);
+      }
+      requestAnimationFrame(frame);
+    </script>
+  </body>
+</html>

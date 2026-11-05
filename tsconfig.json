@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "jsx": "react-jsx",
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noUncheckedIndexedAccess": false,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "paths": {
+      "caav": ["./src/core/index.ts"],
+      "caav/three": ["./src/three/index.ts"],
+      "caav/react": ["./src/react/index.ts"]
+    }
+  },
+  "include": ["src", "test", "site"]
+}

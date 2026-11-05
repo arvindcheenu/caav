@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>caav with React Three Fiber</title>
+    <link rel="stylesheet" href="../../style.css" />
+    <style>
+      #root {
+        position: relative;
+        height: 70vh;
+        margin-top: 16px;
+        overflow: hidden;
+        border-radius: var(--radius);
+        background: #17181b;
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="site-nav" aria-label="Site"><a href="../../">caav home</a><a href="../../docs/#react-three-fiber">React Three Fiber docs</a><a href="https://github.com/arvindcheenu/caav/blob/main/site/examples/react/app.tsx">This example's source</a></nav>
+    <h1 style="font-size: 44px">caav in React Three Fiber</h1>
+    <p>One head-tracked camera, slowly turning, using the library's hooks.</p>
+    <label style="display: grid; gap: 4px; max-width: 280px">Presentation
+      <select id="presentation">
+        <option value="world-embedded">World, embedded</option>
+        <option value="world-separated">World, separated (miniature)</option>
+        <option value="camera-embedded">Camera, embedded (box faces)</option>
+        <option value="camera-separated">Camera, separated (2D panel)</option>
+      </select>
+    </label>
+    <div id="root"></div>
+    <script type="module" src="./app.tsx"></script>
+  </body>
+</html>

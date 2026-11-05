@@ -1,0 +1,23 @@
+# caav
+
+> caav is a small JavaScript library that attaches attention to three.js objects, records it separately for each person, and shows it back in every mode of the HeedVision design space (IEEE VIS 2026). The core has no dependencies, three.js is an adapter, and React Three Fiber hooks are optional. It is not on npm yet: load it through an import map from this site.
+
+Import names are `caav`, `caav/three` and `caav/react`. "Viewer" in the API means a person. Call `session.tick(dt)` and then `view.update(dt)` once per frame.
+
+## Docs
+
+- [Full documentation as plain text](https://heedvision.arvindchee.nu/toolkit/llms-full.txt): everything in one Markdown file, the best thing to read first
+- [Documentation](https://heedvision.arvindchee.nu/toolkit/docs/): the same content as a web page
+- [Agent instructions](https://heedvision.arvindchee.nu/toolkit/AGENTS.md): how to use and change the library correctly
+- [Source on GitHub](https://github.com/arvindcheenu/caav): MIT License
+
+## Examples
+
+- [One-file example](https://heedvision.arvindchee.nu/toolkit/examples/quickstart.html): a complete page using an import map
+- [React Three Fiber example](https://heedvision.arvindchee.nu/toolkit/examples/react/): the hooks in use
+- [Playground](https://heedvision.arvindchee.nu/toolkit/): every setting, with the code for the current settings
+
+## Optional
+
+- [Library files](https://heedvision.arvindchee.nu/toolkit/lib/core/index.js): the compiled core, with type declarations beside each file
+- [The paper](https://heedvision.arvindchee.nu/): HeedVision: Attention Awareness in Collaborative Immersive Analytics Environments
